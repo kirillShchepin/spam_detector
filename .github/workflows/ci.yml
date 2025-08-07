@@ -1,23 +1,17 @@
 name: CI
 
-on: [push]
+on: push
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3  # Уточненная версия
+      - uses: actions/checkout@v3
       
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
           python-version: '3.11'
-      
-      - name: Create virtual environment
-        run: python -m venv venv
-      
-      - name: Activate virtual environment
-        run: source venv/bin/activate
       
       - name: Install dependencies
         run: |
@@ -25,7 +19,8 @@ jobs:
           pip list
       
       - name: Run tests
-        run: pytest tests/ --import-mode=importlib
+        run: |
+          pytest tests/ --import-mode=importlib
       
       - name: Check PEP8
         run: flake8 app/
