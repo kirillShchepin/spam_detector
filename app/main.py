@@ -1,6 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Body
+from pydantic import BaseModel
 from transformers import pipeline
-import torch  # Явный импорт для работы модели
+import torch
+
+class TextInput(BaseModel):
+    text: str
 
 app = FastAPI()
 
@@ -11,5 +15,6 @@ spam_model = pipeline(
 )
 
 @app.post("/predict")
-def predict(text: str):
-    return {"result": spam_model(text)[0]["label"]}  # "spam" или "ham"
+def predict(data: TextInput):
+    result = spam_model(data.text)[0]
+    return {"result": result["label"]}  # "spam" или "ham"
