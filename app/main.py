@@ -18,6 +18,9 @@ spam_model = pipeline(
 def predict(data: TextInput):
     try:
         result = spam_model(data.text)[0]
-        return {"result": result["label"]}
+        return {
+            "result": result["label"],
+            "score": result["score"]
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
