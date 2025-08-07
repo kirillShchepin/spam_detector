@@ -1,7 +1,7 @@
 fastapi==0.109.1
 uvicorn==0.27.0
 transformers==4.40.1
-torch==2.2.1
+torch==2.2.1  # Критично для работы модели!
 pytest==8.4.1
 flake8==7.0.0
 httpx==0.27.0  # Для TestClient
