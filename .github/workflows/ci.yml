@@ -6,7 +6,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install -r requirements.txt
+          pip list  # Для отладки
       - name: Run tests
         run: pytest tests/
       - name: Check PEP8
