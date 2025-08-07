@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
 
+
 class TextInput(BaseModel):
     text: str
 
@@ -26,3 +27,4 @@ def predict(data: TextInput):
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
