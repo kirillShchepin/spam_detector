@@ -1,23 +1,30 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel  # Добавляем валидацию данных
 from transformers import pipeline
-import torch  # Явный импорт
-
-# Проверка доступности CUDA для отладки
-print(f"PyTorch version: {torch.__version__}")
-print(f"CUDA available: {torch.cuda.is_available()}")
+import torch
 
 app = FastAPI()
 
-try:
-    spam_model = pipeline(
-        "text-classification",
-        model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
-        device=-1  # Принудительно используем CPU
-    )
-except Exception as e:
-    print(f"Model loading failed: {str(e)}")
-    raise
+class PredictionRequest(BaseModel):
+    text: str  # Строго типизированный ввод
+
+# Инициализация модели вынесена в отдельную функцию для надежности
+def get_model():
+    try:
+        return pipeline(
+            "text-classification",
+            model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
+            device=-1  # Используем CPU
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Model loading failed: {str(e)}")
+
+model = get_model()
 
 @app.post("/predict")
-def predict(text: str):
-    return {"result": spam_model(text)[0]["label"]}
+async def predict(request: PredictionRequest):  # Используем Pydantic модель
+    try:
+        result = model(request.text)[0]["label"]
+        return {"result": result}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
