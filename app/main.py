@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
 import torch
@@ -16,5 +16,8 @@ spam_model = pipeline(
 
 @app.post("/predict")
 def predict(data: TextInput):
-    result = spam_model(data.text)[0]
-    return {"result": result["label"]}  # "spam" или "ham"
+    try:
+        result = spam_model(data.text)[0]
+        return {"result": result["label"]}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
