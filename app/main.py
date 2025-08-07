@@ -1,18 +1,20 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
-import torch
 
 class TextInput(BaseModel):
     text: str
 
+
 app = FastAPI()
+
 
 # Загрузка модели спам-детектора
 spam_model = pipeline(
     "text-classification",
     model="mrm8488/bert-tiny-finetuned-sms-spam-detection"
 )
+
 
 @app.post("/predict")
 def predict(data: TextInput):
