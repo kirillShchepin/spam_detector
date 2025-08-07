@@ -1,30 +1,15 @@
-from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
+from fastapi import FastAPI
 from transformers import pipeline
-
-
-class TextInput(BaseModel):
-    text: str
-
 
 app = FastAPI()
 
-
-# Загрузка модели спам-детектора
+# Используем облегченную модель для избежания ошибок
 spam_model = pipeline(
     "text-classification",
-    model="mrm8488/bert-tiny-finetuned-sms-spam-detection"
+    model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
+    framework="pt"  # Явно указываем PyTorch
 )
 
-
 @app.post("/predict")
-def predict(data: TextInput):
-    try:
-        result = spam_model(data.text)[0]
-        return {
-            "result": result["label"],
-            "score": result["score"]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
+def predict(text: str):
+    return {"result": spam_model(text)[0]["label"]}
