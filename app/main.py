@@ -91,7 +91,6 @@ async def predict(request: PredictionRequest):
         confidence = float(prediction["score"])
         
         logger.info(f"Prediction: {label} (confidence: {confidence:.2f})")
-        
         return {
             "result": label,
             "confidence": confidence
