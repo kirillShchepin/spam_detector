@@ -81,15 +81,15 @@ async def predict(request: PredictionRequest):
             status_code=400,
             detail="Text cannot be empty"
         )
-    
+
     try:
         logger.info(f"Processing request: {request.text[:100]}...")
         prediction = model(request.text)[0]
         logger.debug(f"Raw prediction: {prediction}")
-        
+
         label = LABEL_MAPPING.get(prediction["label"], prediction["label"])
         confidence = float(prediction["score"])
-        
+
         logger.info(f"Prediction: {label} (confidence: {confidence:.2f})")
         return {
             "result": label,
