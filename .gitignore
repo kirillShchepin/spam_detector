@@ -1,37 +1,20 @@
-# Логи приложения
 logs/
-
-# Python кэш и скомпилированные файлы
 __pycache__/
-*.py[cod]
+*.pyc
 .python-version
-
-# Временные файлы IDE
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# Файлы окружения и секреты
 .env
 .secrets
 *.env
-
-# Образы Docker (если будете использовать)
 Dockerfile
 .dockerignore
-
-# Системные файлы
 .DS_Store
 Thumbs.db
-
-# Jupyter ноутбуки (если вдруг появятся)
 .ipynb_checkpoints/
-
-# Тестовые кэши
 .pytest_cache/
 .coverage
 htmlcov/
-
-# Yandex Cloud специфика (если используется)
 .yc/
