@@ -4,6 +4,7 @@ from transformers import pipeline
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from contextlib import asynccontextmanager
 
 
 # Настройка логирования
@@ -27,7 +28,16 @@ console_handler.setFormatter(logging.Formatter('%(levelname)s: %(message)s'))
 logger.addHandler(file_handler)
 logger.addHandler(console_handler)
 
-app = FastAPI(title="Spam Detector API")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan events"""
+    logger.info("Starting Spam Detector API")
+    yield
+    logger.info("Shutting down Spam Detector API")
+
+
+app = FastAPI(title="Spam Detector API", lifespan=lifespan)
 
 
 class PredictionRequest(BaseModel):
@@ -48,7 +58,7 @@ def load_model():
             "text-classification",
             model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
             device=-1,
-            return_all_scores=False
+            top_k=1
         )
         logger.info("Model loaded successfully")
         return model
@@ -66,13 +76,22 @@ model = load_model()
 @app.post("/predict")
 async def predict(request: PredictionRequest):
     """Классифицирует текст как спам или не спам"""
+    if not request.text.strip():
+        raise HTTPException(
+            status_code=400,
+            detail="Text cannot be empty"
+        )
+    
     try:
         logger.info(f"Processing request: {request.text[:100]}...")
         prediction = model(request.text)[0]
         logger.debug(f"Raw prediction: {prediction}")
+        
         label = LABEL_MAPPING.get(prediction["label"], prediction["label"])
         confidence = float(prediction["score"])
+        
         logger.info(f"Prediction: {label} (confidence: {confidence:.2f})")
+        
         return {
             "result": label,
             "confidence": confidence
@@ -83,15 +102,3 @@ async def predict(request: PredictionRequest):
             status_code=400,
             detail=f"Prediction failed: {str(e)}"
         )
-
-
-@app.on_event("startup")
-async def startup_event():
-    """Действия при запуске приложения"""
-    logger.info("Starting Spam Detector API")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    """Действия при завершении работы"""
-    logger.info("Shutting down Spam Detector API")
