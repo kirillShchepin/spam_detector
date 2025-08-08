@@ -1,3 +1,11 @@
+import logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+@app.post("/predict")
+async def predict(request: PredictionRequest):
+    logger.info(f"Request: {request.text}")
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
