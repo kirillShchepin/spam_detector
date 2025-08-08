@@ -1,9 +1,9 @@
 import sys
 import os
 from fastapi.testclient import TestClient
-from app.main import app
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.main import app
 
 client = TestClient(app)
 
@@ -31,10 +31,11 @@ def test_predict_ham():
 def test_predict_empty_text():
     response = client.post(
         "/predict",
-        json={"text": ""}
+        json={"text": "   "}
     )
     assert response.status_code == 400
     assert "detail" in response.json()
+    assert "cannot be empty" in response.json()["detail"]
 
 
 def test_predict_special_chars():
