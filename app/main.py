@@ -1,35 +1,40 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI
 from pydantic import BaseModel
-from transformers import pipeline
-import torch
+import logging
 
-app = FastAPI()
+# Настройка логирования
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-class PredictionRequest(BaseModel):
+app = FastAPI(title="Spam Detector API")
+
+
+class TextInput(BaseModel):
+    """Модель входных данных"""
     text: str
 
-def get_model():
-    try:
-        # Указываем return_all_scores=False для получения только лучшего результата
-        return pipeline(
-            "text-classification",
-            model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
-            device=-1,
-            return_all_scores=False
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Model loading failed: {str(e)}")
 
-model = get_model()
+def predict_label(text: str) -> str:
+    """Простая проверка на спам по ключевым словам"""
+    spam_keywords = ["win", "free", "prize", "cash", "offer"]
+    text_lower = text.lower()
+    if any(word in text_lower for word in spam_keywords):
+        return "spam"
+    return "ham"
 
-# Создаем маппинг меток
-LABEL_MAPPING = {"LABEL_0": "ham", "LABEL_1": "spam"}
 
 @app.post("/predict")
-async def predict(request: PredictionRequest):
-    try:
-        result = model(request.text)[0]
-        # Преобразуем метку в читаемый формат
-        return {"result": LABEL_MAPPING.get(result["label"], result["label"])}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+async def predict(input_data: TextInput):
+    """
+    Эндпоинт для получения предсказания
+    Принимает JSON: {"text": "..."}
+    Возвращает: {"result": "spam" или "ham"}
+    """
+    result = predict_label(input_data.text)
+    return {"result": result}
+
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    """Действия при завершении работы приложения"""
+    logger.info("Shutting down Spam Detector API")
