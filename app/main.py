@@ -1,10 +1,10 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
-import torch
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+
 
 # Настройка логирования
 os.makedirs("logs", exist_ok=True)  # Создаем папку для логов
@@ -31,14 +31,17 @@ logger.addHandler(console_handler)
 
 app = FastAPI(title="Spam Detector API")
 
+
 class PredictionRequest(BaseModel):
     text: str
+
 
 # Маппинг меток модели
 LABEL_MAPPING = {
     "LABEL_0": "ham",
     "LABEL_1": "spam"
 }
+
 
 def load_model():
     """Загрузка и настройка модели"""
@@ -59,7 +62,9 @@ def load_model():
             detail="Model initialization error"
         )
 
+
 model = load_model()
+
 
 @app.post("/predict")
 async def predict(request: PredictionRequest):
@@ -89,7 +94,6 @@ async def predict(request: PredictionRequest):
             "result": label,
             "confidence": confidence
         }
-        
     except Exception as e:
         logger.error(f"Prediction error: {str(e)}", exc_info=True)
         raise HTTPException(
@@ -97,10 +101,12 @@ async def predict(request: PredictionRequest):
             detail=f"Prediction failed: {str(e)}"
         )
 
+
 @app.on_event("startup")
 async def startup_event():
     """Действия при запуске приложения"""
     logger.info("Starting Spam Detector API")
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
