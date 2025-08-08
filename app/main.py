@@ -6,7 +6,6 @@ from logging.handlers import RotatingFileHandler
 import os
 from contextlib import asynccontextmanager
 
-
 # Настройка логирования
 os.makedirs("logs", exist_ok=True)
 
