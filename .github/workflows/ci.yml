@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:  # позволяет запускать вручную
   push:
     branches: [ main ]
   pull_request:
