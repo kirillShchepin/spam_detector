@@ -19,19 +19,11 @@ jobs:
       - name: Login to Yandex Cloud Container Registry
         uses: yc-actions/yc-cr-login@v1
         with:
-          yc-sa-json-credentials: |
-            {
-              "id": "${{ secrets.YC_KEY_ID }}",
-              "service_account_id": "${{ secrets.YC_SERVICE_ACCOUNT_ID }}",
-              "created_at": "2025-08-08T18:29:04.523154459Z",
-              "key_algorithm": "RSA_2048",
-              "public_key": "${{ secrets.YC_PUBLIC_KEY }}",
-              "private_key": "${{ secrets.YC_PRIVATE_KEY }}"
-            }
+          yc-sa-json-credentials: ${{ secrets.YC_KEY_JSON }}
 
       - name: Build and Push Docker image
         run: |
-          REGISTRY=cr.yandex/crprjs00pgprsvhh78e
+          REGISTRY=cr.yandex/${{ secrets.YC_REGISTRY_ID }}
           IMAGE=$REGISTRY/spam-detector:latest
           docker build -t $IMAGE .
           docker push $IMAGE
