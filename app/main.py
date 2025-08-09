@@ -8,11 +8,16 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Spam Detector API")
 
+@app.get("/")
+async def root():
+    return {
+        "status": "ok",
+        "message": "Spam Detector API is running"
+    }
 
 class TextInput(BaseModel):
     """Модель входных данных"""
     text: str
-
 
 def predict_label(text: str) -> str:
     """Простая проверка на спам по ключевым словам"""
@@ -21,7 +26,6 @@ def predict_label(text: str) -> str:
     if any(word in text_lower for word in spam_keywords):
         return "spam"
     return "ham"
-
 
 @app.post("/predict")
 async def predict(input_data: TextInput):
@@ -32,7 +36,6 @@ async def predict(input_data: TextInput):
     """
     result = predict_label(input_data.text)
     return {"result": result}
-
 
 @app.on_event("shutdown")
 async def shutdown_event():
