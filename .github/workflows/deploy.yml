@@ -23,7 +23,6 @@ jobs:
 
       - name: Build and Push Docker image
         run: |
-          REGISTRY=cr.yandex/${{ secrets.YC_REGISTRY_ID }}
-          IMAGE=$REGISTRY/spam-detector:latest
+          IMAGE=cr.yandex/${{ secrets.YC_REGISTRY_ID }}/spam-detector:latest
           docker build -t $IMAGE .
           docker push $IMAGE
