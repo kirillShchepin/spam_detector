@@ -11,67 +11,73 @@ logger = logging.getLogger(__name__)
 app = FastAPI()
 
 
+class PredictionRequest(BaseModel):
+    """Модель для входных данных API."""
+    text: str
+
+
 @lru_cache(maxsize=1)
 def load_model():
-    """Load and cache the ML model."""
+    """Загружает и кэширует модель классификации текста."""
     try:
-        # Using smaller model for testing
         model = pipeline(
             "text-classification",
             model="distilbert-base-uncased-finetuned-sst-2-english",
             device="cpu"
         )
-        logger.info("Model test prediction: %s", model("Free prize!")[0])
+        logger.info("Model loaded successfully")
         return model
     except Exception as e:
-        logger.error("Loading failed: %s", str(e), exc_info=True)
+        logger.error("Model loading failed: %s", str(e), exc_info=True)
         raise
 
 
 try:
     model = load_model()
 except Exception as e:
-    logger.critical("INIT FAILED: %s", str(e))
+    logger.critical("Model initialization failed: %s", str(e))
     model = None
 
 
-@app.get("/health")
-async def health():
-    """Health check endpoint."""
+@app.get("/")
+async def root():
+    """Корневой эндпоинт для проверки работы API."""
     return {
         "status": "ok" if model else "error",
-        "model": "loaded" if model else "failed"
+        "message": "Spam Detector API",
+        "model_loaded": bool(model)
     }
 
 
 @app.post("/predict")
-async def predict(input_data: BaseModel):
-    """Make spam/ham prediction for input text.
-
+async def predict(request: PredictionRequest):
+    """
+    Эндпоинт для классификации текста на спам/не спам.
+    
     Args:
-        input_data: Pydantic model with 'text' field
-
+        request: PredictionRequest с полем text
+        
     Returns:
-        dict: Prediction result with confidence score
-
+        dict: Результат классификации и уверенность модели
+        
     Raises:
-        HTTPException: If model isn't loaded or prediction fails
+        HTTPException: Если модель не загружена или произошла ошибка
     """
     if not model:
         raise HTTPException(
             status_code=503,
-            detail="Model unavailable"
+            detail="Model not loaded"
         )
 
     try:
-        result = model(input_data.text)[0]
+        result = model(request.text)[0]
         return {
             "result": "spam" if result["label"] == "LABEL_1" else "ham",
-            "confidence": result["score"]
+            "confidence": float(result["score"])
         }
     except Exception as e:
-        logger.error("Prediction error: %s", str(e), exc_info=True)
+        logger.error("Prediction failed: %s", str(e), exc_info=True)
         raise HTTPException(
             status_code=500,
-            detail=str(e)
+            detail="Prediction error"
         )
