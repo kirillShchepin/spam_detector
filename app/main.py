@@ -22,6 +22,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 # Загрузка модели с кэшированием
 @lru_cache(maxsize=1)
 def load_model():
@@ -31,7 +32,7 @@ def load_model():
             "text-classification",
             model="mariagrandury/roberta-base-finetuned-sms-spam-detection",
             device="cpu"  # Для GPU укажите device=0
-        )
+)
         
         # Тестовая проверка модели при загрузке
         test_spam = model("Win a free iPhone now! Click here!")[0]
