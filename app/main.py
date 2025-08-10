@@ -10,12 +10,14 @@ import os
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 app = FastAPI(title="Spam Detector API")
 
-# Включаем CORS, чтобы можно было вызывать API с любых доменов
+
+# Включаем CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Можно указать конкретные домены
+    allow_origins=["*"],  # Разрешить все домены
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -32,7 +34,7 @@ async def root():
 
 @app.get("/web")
 async def web_interface():
-    file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
+    file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "index.html"))
     return FileResponse(file_path)
 
 
@@ -52,11 +54,7 @@ def predict_label(text: str) -> str:
 
 @app.post("/predict")
 async def predict(input_data: TextInput):
-    """
-    Эндпоинт для получения предсказания
-    Принимает JSON: {"text": "..."}
-    Возвращает: {"result": "spam" или "ham"}
-    """
+    """JSON API: {"text": "..."} → {"result": "..."}"""
     result = predict_label(input_data.text)
     return {"result": result}
 
