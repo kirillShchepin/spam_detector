@@ -4,24 +4,43 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 import logging
 import os
-
+from transformers import pipeline
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-
 app = FastAPI(title="Spam Detector API")
-
 
 # Включаем CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Разрешить все домены
+    allow_origins=["*"],  # Для продакшена лучше ограничить
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+class TextInput(BaseModel):
+    """Модель входных данных"""
+    text: str
+
+
+@app.on_event("startup")
+async def startup_event():
+    """
+    Загружаем предобученную модель при старте приложения.
+    Модель: fine-tuned BERT для классификации спама
+    """
+    global spam_detector
+    logger.info("Загрузка модели спам-фильтра...")
+    spam_detector = pipeline(
+        "text-classification",
+        model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
+        tokenizer="mrm8488/bert-tiny-finetuned-sms-spam-detection"
+    )
+    logger.info("Модель загружена успешно!")
 
 
 @app.get("/")
@@ -34,34 +53,24 @@ async def root():
 
 @app.get("/web")
 async def web_interface():
-    file_path = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), "..", "index.html")
-    )
+    file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
     return FileResponse(file_path)
-
-
-class TextInput(BaseModel):
-    """Модель входных данных"""
-    text: str
-
-
-def predict_label(text: str) -> str:
-    """Простая проверка на спам по ключевым словам"""
-    spam_keywords = ["win", "free", "prize", "cash", "offer"]
-    text_lower = text.lower()
-    if any(word in text_lower for word in spam_keywords):
-        return "spam"
-    return "ham"
 
 
 @app.post("/predict")
 async def predict(input_data: TextInput):
-    """JSON API: {"text": "..."} → {"result": "..."}"""
-    result = predict_label(input_data.text)
-    return {"result": result}
+    """
+    Получение предсказания от модели
+    """
+    prediction = spam_detector(input_data.text)[0]
+    label = prediction["label"].lower()
+    score = round(prediction["score"], 3)
+    return {
+        "result": label,
+        "confidence": score
+    }
 
 
 @app.on_event("shutdown")
 async def shutdown_event():
-    """Действия при завершении работы приложения"""
     logger.info("Shutting down Spam Detector API")
