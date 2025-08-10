@@ -47,13 +47,13 @@ async def health():
 @app.post("/predict")
 async def predict(input_data: BaseModel):
     """Make spam/ham prediction for input text.
-    
+
     Args:
         input_data: Pydantic model with 'text' field
-        
+
     Returns:
         dict: Prediction result with confidence score
-        
+
     Raises:
         HTTPException: If model isn't loaded or prediction fails
     """
@@ -62,7 +62,7 @@ async def predict(input_data: BaseModel):
             status_code=503,
             detail="Model unavailable"
         )
-        
+
     try:
         result = model(input_data.text)[0]
         return {
