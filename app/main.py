@@ -53,9 +53,9 @@ def predict_label(text: str) -> str:
     prediction = model(text)[0]
     label = prediction["label"]
     score = prediction["score"]
-    
+
     logger.info(f"Prediction: {label} with score {score:.4f}")
-    
+
     if label == "LABEL_1":
         return "spam"
     return "ham"
