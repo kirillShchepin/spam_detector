@@ -53,13 +53,13 @@ async def root():
 async def predict(request: PredictionRequest):
     """
     Эндпоинт для классификации текста на спам/не спам.
-    
+
     Args:
         request: PredictionRequest с полем text
-        
+
     Returns:
         dict: Результат классификации и уверенность модели
-        
+
     Raises:
         HTTPException: Если модель не загружена или произошла ошибка
     """
