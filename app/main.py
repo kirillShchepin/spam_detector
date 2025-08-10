@@ -6,6 +6,7 @@ import logging
 import os
 from transformers import pipeline
 
+
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ spam_detector = pipeline(
 )
 logger.info("Модель загружена.")
 
+
 @app.get("/")
 async def root():
     return {
@@ -37,13 +39,16 @@ async def root():
         "message": "Spam Detector API is running"
     }
 
+
 @app.get("/web")
 async def web_interface():
     file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
     return FileResponse(file_path)
 
+
 class TextInput(BaseModel):
     text: str
+
 
 @app.post("/predict")
 async def predict(input_data: TextInput):
@@ -51,9 +56,10 @@ async def predict(input_data: TextInput):
     Получение предсказания от настоящей ML-модели.
     """
     result = spam_detector(input_data.text)[0]
-    label = result["label"].lower()  # spam или ham
+    label = result["label"].lower()
     score = round(result["score"], 4)
     return {"result": label, "confidence": score}
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
