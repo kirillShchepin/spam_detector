@@ -1,6 +1,9 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 import logging
+import os
 
 
 # Настройка логирования
@@ -9,6 +12,15 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Spam Detector API")
 
+# Включаем CORS, чтобы можно было вызывать API с любых доменов
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Можно указать конкретные домены
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 @app.get("/")
 async def root():
@@ -16,6 +28,12 @@ async def root():
         "status": "ok",
         "message": "Spam Detector API is running"
     }
+
+
+@app.get("/web")
+async def web_interface():
+    file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
+    return FileResponse(file_path)
 
 
 class TextInput(BaseModel):
