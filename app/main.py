@@ -64,6 +64,7 @@ async def root():
         "model_loaded": bool(model)
     }
 
+
 @app.post("/predict")
 async def predict(input_data: TextInput):
     """
@@ -73,42 +74,44 @@ async def predict(input_data: TextInput):
     """
     if not model:
         raise HTTPException(status_code=503, detail="Model not loaded")
-    
+
     try:
         # Логируем входные данные
         logger.info(f"Predict request: {input_data.text[:50]}...")
-        
+
         # Получаем предсказание
         prediction = model(input_data.text)[0]
         logger.info(f"Raw prediction: {prediction}")
-        
+
         # Определяем результат (метки специфичны для этой модели)
         label = prediction["label"]
         confidence = prediction["score"]
-        
+
         if label == "LABEL_1":
             result = "spam"
         else:
             result = "ham"
-        
+
         # Логируем детали
         logger.info(f"Result: {result} (confidence: {confidence:.2f})")
-        
+
         return {
             "result": result,
             "confidence": float(confidence),
             "raw_prediction": prediction
         }
-        
+
     except Exception as e:
         logger.error(f"Prediction error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 @app.get("/web")
 async def web_interface():
     """Веб-интерфейс для тестирования"""
     file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
     return FileResponse(file_path)
+
 
 @app.on_event("shutdown")
 async def shutdown_event():
