@@ -32,17 +32,18 @@ def load_model():
             "text-classification",
             model="mariagrandury/roberta-base-finetuned-sms-spam-detection",
             device="cpu"  # Для GPU укажите device=0
-)
-        
+        )
+
         # Тестовая проверка модели при загрузке
         test_spam = model("Win a free iPhone now! Click here!")[0]
         test_ham = model("Hello, let's meet tomorrow")[0]
         logger.info(f"Model loaded. Test spam: {test_spam}, test ham: {test_ham}")
-        
+
         return model
     except Exception as e:
         logger.error(f"Model loading failed: {e}")
         raise RuntimeError("Failed to load model")
+
 
 try:
     model = load_model()
@@ -50,8 +51,10 @@ except Exception as e:
     logger.critical(f"Critical error: {e}")
     model = None
 
+
 class TextInput(BaseModel):
     text: str
+
 
 @app.get("/")
 async def root():
