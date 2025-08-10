@@ -34,7 +34,9 @@ async def root():
 
 @app.get("/web")
 async def web_interface():
-    file_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "index.html"))
+    file_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "..", "index.html")
+    )
     return FileResponse(file_path)
 
 
