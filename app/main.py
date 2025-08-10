@@ -15,33 +15,20 @@ app = FastAPI(title="Spam Detector API")
 # Включаем CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Для продакшена лучше ограничить
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-
-class TextInput(BaseModel):
-    """Модель входных данных"""
-    text: str
-
-
-@app.on_event("startup")
-async def startup_event():
-    """
-    Загружаем предобученную модель при старте приложения.
-    Модель: fine-tuned BERT для классификации спама
-    """
-    global spam_detector
-    logger.info("Загрузка модели спам-фильтра...")
-    spam_detector = pipeline(
-        "text-classification",
-        model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
-        tokenizer="mrm8488/bert-tiny-finetuned-sms-spam-detection"
-    )
-    logger.info("Модель загружена успешно!")
-
+# Загружаем настоящую модель спам-детекции
+logger.info("Загружаем ML-модель...")
+spam_detector = pipeline(
+    "text-classification",
+    model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
+    tokenizer="mrm8488/bert-tiny-finetuned-sms-spam-detection"
+)
+logger.info("Модель загружена.")
 
 @app.get("/")
 async def root():
@@ -50,26 +37,23 @@ async def root():
         "message": "Spam Detector API is running"
     }
 
-
 @app.get("/web")
 async def web_interface():
     file_path = os.path.join(os.path.dirname(__file__), "..", "index.html")
     return FileResponse(file_path)
 
+class TextInput(BaseModel):
+    text: str
 
 @app.post("/predict")
 async def predict(input_data: TextInput):
     """
-    Получение предсказания от модели
+    Получение предсказания от настоящей ML-модели.
     """
-    prediction = spam_detector(input_data.text)[0]
-    label = prediction["label"].lower()
-    score = round(prediction["score"], 3)
-    return {
-        "result": label,
-        "confidence": score
-    }
-
+    result = spam_detector(input_data.text)[0]
+    label = result["label"].lower()  # spam или ham
+    score = round(result["score"], 4)
+    return {"result": label, "confidence": score}
 
 @app.on_event("shutdown")
 async def shutdown_event():
