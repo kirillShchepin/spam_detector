@@ -2,9 +2,10 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
+from transformers import pipeline
 import logging
 import os
-from transformers import pipeline
+
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Spam Detector API")
 
-# Включаем CORS, чтобы можно было вызывать API с любых доменов
+# Включаем CORS
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Можно указать конкретные домены
@@ -21,16 +22,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Загружаем модель Hugging Face
-logger.info("Загрузка модели...")
-model = pipeline("text-classification", model="mrm8488/bert-tiny-finetuned-sms-spam-detection")
-logger.info("Модель загружена.")
-
-# Маппинг меток модели в привычные значения
-LABEL_MAP = {
-    "LABEL_0": "ham",   # не спам
-    "LABEL_1": "spam"   # спам
-}
+# Загружаем модель для классификации спама
+model = pipeline(
+    "text-classification",
+    model="mrm8488/bert-tiny-finetuned-sms-spam-detection"
+)
 
 
 @app.get("/")
@@ -53,10 +49,11 @@ class TextInput(BaseModel):
 
 
 def predict_label(text: str) -> str:
-    """Предсказание спама с использованием ML-модели"""
-    prediction = model(text)
-    raw_label = prediction[0]["label"].upper()
-    return LABEL_MAP.get(raw_label, raw_label)
+    """Определяем спам или нет с помощью ML-модели"""
+    prediction = model(text)[0]["label"]
+    if prediction == "LABEL_1":
+        return "spam"
+    return "ham"
 
 
 @app.post("/predict")
