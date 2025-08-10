@@ -2,11 +2,14 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 import logging
 
+
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 app = FastAPI(title="Spam Detector API")
+
 
 @app.get("/")
 async def root():
@@ -15,9 +18,11 @@ async def root():
         "message": "Spam Detector API is running"
     }
 
+
 class TextInput(BaseModel):
     """Модель входных данных"""
     text: str
+
 
 def predict_label(text: str) -> str:
     """Простая проверка на спам по ключевым словам"""
@@ -27,11 +32,13 @@ def predict_label(text: str) -> str:
         return "spam"
     return "ham"
 
+
 @app.post("/predict")
 async def predict(input_data: TextInput):
     """JSON API: {"text": "..."} → {"result": "..."}"""
     result = predict_label(input_data.text)
     return {"result": result}
+
 
 # Пытаемся подключить поддержку HTML-форм
 try:
@@ -67,6 +74,8 @@ try:
 except ImportError:
     logger.warning("python-multipart не установлен — эндпоинт /web отключён")
 
+
 @app.on_event("shutdown")
 async def shutdown_event():
+    """Действия при завершении работы приложения"""
     logger.info("Shutting down Spam Detector API")
