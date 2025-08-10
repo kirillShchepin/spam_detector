@@ -50,8 +50,13 @@ class TextInput(BaseModel):
 
 def predict_label(text: str) -> str:
     """Определяем спам или нет с помощью ML-модели"""
-    prediction = model(text)[0]["label"].lower
-    if prediction in ["label_1", "spam"]:
+    prediction = model(text)[0]
+    label = prediction["label"]
+    score = prediction["score"]
+    
+    logger.info(f"Prediction: {label} with score {score:.4f}")
+    
+    if label == "LABEL_1":
         return "spam"
     return "ham"
 
