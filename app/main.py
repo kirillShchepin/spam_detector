@@ -14,6 +14,7 @@ app = FastAPI()
 # Добавляем раздачу статики для HTML-страницы
 app.mount("/web", StaticFiles(directory=".", html=True), name="web")
 
+
 class PredictionRequest(BaseModel):
     """Модель для входных данных API."""
     text: str
