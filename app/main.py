@@ -1,10 +1,9 @@
-"""FastAPI приложение для детекции спама с использованием лёгкой модели."""
-
-import logging
-from functools import lru_cache
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
+import logging
+from functools import lru_cache
+
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -13,27 +12,21 @@ app = FastAPI()
 
 
 class PredictionRequest(BaseModel):
-    """Модель данных для запроса предсказания."""
+    """Модель для входных данных API."""
     text: str
-
-
-LABEL_MAP = {
-    "LABEL_0": "ham",
-    "LABEL_1": "spam"
-}
 
 
 @lru_cache(maxsize=1)
 def load_model():
-    """Загружает и кэширует модель классификации спама."""
+    """Загружает и кэширует модель классификации текста."""
     try:
-        model_pipeline = pipeline(
+        model = pipeline(
             "text-classification",
-            model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
             device="cpu"
         )
-        logger.info("Spam detection model loaded successfully")
-        return model_pipeline
+        logger.info("Model loaded successfully")
+        return model
     except Exception as e:
         logger.error("Model loading failed: %s", str(e), exc_info=True)
         raise
@@ -59,13 +52,16 @@ async def root():
 @app.post("/predict")
 async def predict(request: PredictionRequest):
     """
-    Эндпоинт для классификации текста на спам или не спам.
+    Эндпоинт для классификации текста на спам/не спам.
 
     Args:
-        request: объект с полем text
+        request: PredictionRequest с полем text
 
     Returns:
-        dict: метка классификации и уверенность
+        dict: Результат классификации и уверенность модели
+
+    Raises:
+        HTTPException: Если модель не загружена или произошла ошибка
     """
     if not model:
         raise HTTPException(
@@ -75,9 +71,8 @@ async def predict(request: PredictionRequest):
 
     try:
         result = model(request.text)[0]
-        label = LABEL_MAP.get(result["label"], result["label"].lower())
         return {
-            "result": label,
+            "result": "spam" if result["label"] == "POSITIVE" else "ham",
             "confidence": float(result["score"])
         }
     except Exception as e:
