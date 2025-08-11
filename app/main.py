@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from transformers import pipeline
 import logging
@@ -10,6 +11,8 @@ logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
+# Добавляем раздачу статики для HTML-страницы
+app.mount("/web", StaticFiles(directory=".", html=True), name="web")
 
 class PredictionRequest(BaseModel):
     """Модель для входных данных API."""
