@@ -22,7 +22,7 @@ def load_model():
     try:
         model = pipeline(
             "text-classification",
-            model="seara/rubert-tiny2-russian-sentiment",
+            model="distilbert-base-uncased-finetuned-sst-2-english",
             device="cpu"
         )
         logger.info("Model loaded successfully")
