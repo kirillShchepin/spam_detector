@@ -17,6 +17,12 @@ class PredictionRequest(BaseModel):
     text: str
 
 
+LABEL_MAP = {
+    "LABEL_0": "ham",
+    "LABEL_1": "spam"
+}
+
+
 @lru_cache(maxsize=1)
 def load_model():
     """Загружает и кэширует модель классификации спама."""
@@ -69,8 +75,9 @@ async def predict(request: PredictionRequest):
 
     try:
         result = model(request.text)[0]
+        label = LABEL_MAP.get(result["label"], result["label"].lower())
         return {
-            "result": result["label"].lower(),
+            "result": label,
             "confidence": float(result["score"])
         }
     except Exception as e:
