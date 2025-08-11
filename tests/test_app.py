@@ -1,6 +1,7 @@
+"""Тесты для API спам-детектора."""
+
 from fastapi.testclient import TestClient
 from app.main import app
-
 
 client = TestClient(app)
 
@@ -9,7 +10,9 @@ def test_root():
     """Тест корневого эндпоинта."""
     response = client.get("/")
     assert response.status_code == 200
-    assert response.json()["status"] in ("ok", "error")
+    data = response.json()
+    assert data["status"] in ("ok", "error")
+    assert "model_loaded" in data
 
 
 def test_predict_spam():
@@ -19,7 +22,9 @@ def test_predict_spam():
         json={"text": "Win a free prize now!"}
     )
     assert response.status_code == 200
-    assert response.json()["result"] in ["spam", "ham"]
+    data = response.json()
+    assert data["result"] in ("spam", "ham")
+    assert 0.0 <= data["confidence"] <= 1.0
 
 
 def test_predict_ham():
@@ -29,4 +34,6 @@ def test_predict_ham():
         json={"text": "Hello, how are you?"}
     )
     assert response.status_code == 200
-    assert response.json()["result"] in ["spam", "ham"]
+    data = response.json()
+    assert data["result"] in ("spam", "ham")
+    assert 0.0 <= data["confidence"] <= 1.0
