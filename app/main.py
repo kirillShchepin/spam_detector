@@ -1,9 +1,10 @@
+"""FastAPI приложение для детекции спама с использованием лёгкой модели."""
+
+import logging
+from functools import lru_cache
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from transformers import pipeline
-import logging
-from functools import lru_cache
-
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -12,21 +13,21 @@ app = FastAPI()
 
 
 class PredictionRequest(BaseModel):
-    """Модель для входных данных API."""
+    """Модель данных для запроса предсказания."""
     text: str
 
 
 @lru_cache(maxsize=1)
 def load_model():
-    """Загружает и кэширует модель классификации текста."""
+    """Загружает и кэширует модель классификации спама."""
     try:
-        model = pipeline(
+        model_pipeline = pipeline(
             "text-classification",
-            model="distilbert-base-uncased-finetuned-sst-2-english",
+            model="mrm8488/bert-tiny-finetuned-sms-spam-detection",
             device="cpu"
         )
-        logger.info("Model loaded successfully")
-        return model
+        logger.info("Spam detection model loaded successfully")
+        return model_pipeline
     except Exception as e:
         logger.error("Model loading failed: %s", str(e), exc_info=True)
         raise
@@ -52,16 +53,13 @@ async def root():
 @app.post("/predict")
 async def predict(request: PredictionRequest):
     """
-    Эндпоинт для классификации текста на спам/не спам.
+    Эндпоинт для классификации текста на спам или не спам.
 
     Args:
-        request: PredictionRequest с полем text
+        request: объект с полем text
 
     Returns:
-        dict: Результат классификации и уверенность модели
-
-    Raises:
-        HTTPException: Если модель не загружена или произошла ошибка
+        dict: метка классификации и уверенность
     """
     if not model:
         raise HTTPException(
@@ -72,7 +70,7 @@ async def predict(request: PredictionRequest):
     try:
         result = model(request.text)[0]
         return {
-            "result": "spam" if result["label"] == "LABEL_1" else "ham",
+            "result": result["label"].lower(),
             "confidence": float(result["score"])
         }
     except Exception as e:
