@@ -72,10 +72,8 @@ async def predict(request: PredictionRequest):
     try:
         result = model(request.text)[0]
         return {
-            "result": "spam" if result["label"] == "positive"
-            else "ham" if result["label"] == "negative" else "neut",
-            "confidence": float(result["score"]),
-            "res": result["label"]
+            "result": "spam" if result["label"] == "positive" else "ham",
+            "confidence": float(result["score"])
         }
     except Exception as e:
         logger.error("Prediction failed: %s", str(e), exc_info=True)
