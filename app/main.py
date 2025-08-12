@@ -32,9 +32,6 @@ def load_model():
         raise
 
 
-
-
-
 @app.get("/")
 async def root():
     try:
