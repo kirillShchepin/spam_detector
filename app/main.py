@@ -32,14 +32,15 @@ def load_model():
         raise
 
 
+try:
+    model = load_model()
+except Exception as e:
+    logger.critical("Model initialization failed: %s", str(e))
+    model = None
+    
+
 @app.get("/")
 async def root():
-    try:
-        model = load_model()
-    
-    except Exception as e:
-        logger.critical("Model initialization failed: %s", str(e))
-        model = None
     """Корневой эндпоинт для проверки работы API."""
     return {
         "status": "ok" if model else "error",
