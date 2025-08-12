@@ -37,7 +37,6 @@ try:
 except Exception as e:
     logger.critical("Model initialization failed: %s", str(e))
     model = None
-    
 
 @app.get("/")
 async def root():
